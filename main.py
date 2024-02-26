@@ -1,5 +1,6 @@
 import os
 import shutil
+import tkinter as tk
 import customtkinter as ctk
 from PIL import Image, ImageTk
 
@@ -23,11 +24,11 @@ class PhotoFilter:
         self.master.bind('<Right>', self.keep)
         self.master.bind('<Up>', self.skip)
 
-        self.menu = ctk.CTkMenu(self.master)
+        self.menu = tk.Menu(self.master)
         self.master.config(menu=self.menu)
 
         # Create 'Edit' menu
-        self.edit_menu = ctk.CTkMenu(self.menu)
+        self.edit_menu = tk.Menu(self.menu)
         self.menu.add_cascade(label='Edit', menu=self.edit_menu)
         self.edit_menu.add_command(label='Undo', command=self.undo)
 
