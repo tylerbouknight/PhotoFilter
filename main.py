@@ -14,7 +14,7 @@ class PhotoFilter:
 
         # Filter out directories
         self.photos = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
-        self.photos = iter(self.photos)
+        self.current_photo_index = 0
 
         self.photo = None
         self.label = Label(self.master)
@@ -42,9 +42,10 @@ class PhotoFilter:
 
     def next_photo(self):
         try:
-            self.photo = next(self.photos)
+            self.photo = self.photos[self.current_photo_index]
+            self.current_photo_index += 1
             self.display_photo()
-        except StopIteration:
+        except IndexError:
             self.master.quit()
 
     
@@ -64,8 +65,9 @@ class PhotoFilter:
             last_action, last_photo = self.action_stack.pop()
             shutil.move(os.path.join(self.directory, last_action, last_photo), os.path.join(self.directory, last_photo))
             self.photo = last_photo
+            self.current_photo_index -= 1
             self.display_photo()
-
+            
     def move_to_trash(self, event):
         shutil.move(os.path.join(self.directory, self.photo), os.path.join(self.directory, 'trash', self.photo))
         self.action_stack.append(('trash', self.photo))
