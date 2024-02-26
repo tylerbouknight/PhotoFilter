@@ -4,6 +4,9 @@ from PyQt5.QtWidgets import QMainWindow, QLabel, QVBoxLayout, QWidget, QAction, 
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import Qt
 
+def load_stylesheet(filename):
+    with open(filename, "r") as file:
+        return file.read()
 class PhotoFilter(QMainWindow):
     def __init__(self, directory):
         super().__init__()
@@ -41,7 +44,6 @@ class PhotoFilter(QMainWindow):
         self.setFixedSize(800, 600)
 
         self.show()
-
 
     def next_photo(self):
         try:

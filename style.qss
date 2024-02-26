@@ -1,0 +1,40 @@
+/* Set the background color for the main window */
+QMainWindow {
+    background-color: #333;
+}
+
+/* Set the color for labels */
+QLabel {
+    color: #FFF;
+}
+
+/* Style the menu bar */
+QMenuBar {
+    background-color: #555;
+}
+
+QMenuBar::item {
+    background-color: #555;
+    color: #FFF;
+}
+
+/* Style the menu items when hovered */
+QMenuBar::item:selected {
+    background-color: #888;
+}
+
+/* Style the menu items when pressed */
+QMenuBar::item:pressed {
+    background-color: #BBB;
+}
+
+/* Style the action items */
+QAction {
+    background-color: #555;
+    color: #FFF;
+}
+
+/* Style the action items when hovered */
+QAction:hover {
+    background-color: #888;
+}
