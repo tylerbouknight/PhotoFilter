@@ -1,7 +1,6 @@
 import os
 import shutil
-import tkinter as tk
-import customtkinter as ctk
+from tkinter import *
 from PIL import Image, ImageTk
 
 class PhotoFilter:
@@ -18,19 +17,22 @@ class PhotoFilter:
         self.photos = iter(self.photos)
 
         self.photo = None
-        self.label = ctk.CTkLabel(self.master)
+        self.label = Label(self.master)
         self.label.pack()
         self.master.bind('<Left>', self.move_to_trash)
         self.master.bind('<Right>', self.keep)
         self.master.bind('<Up>', self.skip)
 
-        self.menu = tk.Menu(self.master)
+        self.menu = Menu(self.master)
         self.master.config(menu=self.menu)
 
         # Create 'Edit' menu
-        self.edit_menu = tk.Menu(self.menu)
+        self.edit_menu = Menu(self.menu)
         self.menu.add_cascade(label='Edit', menu=self.edit_menu)
         self.edit_menu.add_command(label='Undo', command=self.undo)
+
+        # Bind Ctrl+Z to undo
+        self.master.bind_all('<Control-z>', lambda event: self.undo())
 
         # Create folders if they don't exist
         os.makedirs(os.path.join(self.directory, 'trash'), exist_ok=True)
@@ -45,6 +47,7 @@ class PhotoFilter:
         except StopIteration:
             self.master.quit()
 
+    
     def display_photo(self):
         image = Image.open(os.path.join(self.directory, self.photo))
 
@@ -76,6 +79,6 @@ class PhotoFilter:
     def skip(self, event):
         self.next_photo()
 
-root = ctk.CTk()
+root = Tk()
 app = PhotoFilter(root, 'C:/Users/Tyler/Pictures/Found - Copy')
 root.mainloop()
