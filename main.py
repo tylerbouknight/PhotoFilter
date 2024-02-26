@@ -31,6 +31,9 @@ class PhotoFilter:
         self.menu.add_cascade(label='Edit', menu=self.edit_menu)
         self.edit_menu.add_command(label='Undo', command=self.undo)
 
+        # Bind Ctrl+Z to undo
+        self.master.bind_all('<Control-z>', lambda event: self.undo())
+
         # Create folders if they don't exist
         os.makedirs(os.path.join(self.directory, 'trash'), exist_ok=True)
         os.makedirs(os.path.join(self.directory, 'keep'), exist_ok=True)
