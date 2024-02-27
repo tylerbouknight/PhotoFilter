@@ -1,11 +1,15 @@
-from PyQt5.QtWidgets import QApplication
-from photo_filter import PhotoFilter, load_stylesheet
+from PyQt5.QtWidgets import QApplication, QFileDialog
+from photo_filter import *
 
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
     stylesheet = load_stylesheet('style.qss')
     app.setStyleSheet(stylesheet)
-    directory = 'C:/Users/Tyler/Pictures/Found - Copy'
+
+    # Use config_path to get the directory
+    directory = config_path()
+
     ex = PhotoFilter(directory)
     sys.exit(app.exec_())
+

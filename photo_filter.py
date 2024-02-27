@@ -1,8 +1,27 @@
 import os
 import shutil
-from PyQt5.QtWidgets import QMainWindow, QLabel, QVBoxLayout, QWidget, QAction, QMenu, QGraphicsOpacityEffect
+import configparser
+from PyQt5.QtWidgets import QMainWindow, QLabel, QVBoxLayout, QWidget, QAction, QMenu, QGraphicsOpacityEffect, QFileDialog
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QPoint, QEvent
+
+def config_path(filename='config.ini', section='DEFAULT', option='directory', default='C:\\'):
+    config = configparser.ConfigParser()
+    config.read(filename)
+    if config.has_option(section, option):
+        return config.get(section, option)
+    else:
+        config.set(section, option, default)
+        with open(filename, 'w') as configfile:
+            config.write(configfile)
+        return default
+
+def write_config_path(new_directory, filename='config.ini', section='DEFAULT', option='directory'):
+    config = configparser.ConfigParser()
+    config.read(filename)
+    config.set(section, option, new_directory)
+    with open(filename, 'w') as configfile:
+        config.write(configfile)
 
 def load_stylesheet(filename):
     with open(filename, "r") as file:
@@ -33,6 +52,9 @@ class PhotoFilter(QMainWindow):
         self.undo_action.triggered.connect(self.undo)
         self.edit_menu.addAction(self.undo_action)
         self.menu.addMenu(self.edit_menu)
+        self.change_dir_action = QAction('Change Directory', self)
+        self.change_dir_action.triggered.connect(self.change_directory)
+        self.edit_menu.addAction(self.change_dir_action)
         self.animation = QPropertyAnimation(self.label, b"pos")
         self.animation.finished.connect(self.next_photo)
         self.animation.setEasingCurve(QEasingCurve.OutCubic)
@@ -49,6 +71,13 @@ class PhotoFilter(QMainWindow):
 
         self.show()
 
+    def change_directory(self):
+        self.directory = QFileDialog.getExistingDirectory(None, 'Select a folder:', 'C:\\', QFileDialog.ShowDirsOnly)
+        write_config_path(self.directory)  # Store the new directory path
+        self.photos = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
+        self.current_photo_index = 0
+        self.next_photo()
+        
     def animate_move(self, x, y):
         self.animation.setDuration(350)  # Duration in milliseconds
         self.animation.setStartValue(self.label.pos())
