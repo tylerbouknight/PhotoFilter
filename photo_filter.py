@@ -60,12 +60,6 @@ class PhotoFilter(QMainWindow):
         self.animation.setEasingCurve(QEasingCurve.OutCubic)
         self.installEventFilter(self)
 
-        # Create folders if they don't exist
-        os.makedirs(os.path.join(self.directory, 'trash'), exist_ok=True)
-        os.makedirs(os.path.join(self.directory, 'keep'), exist_ok=True)
-
-        self.next_photo()
-
         # Set a fixed window size
         self.setFixedSize(800, 600)
 
@@ -76,6 +70,12 @@ class PhotoFilter(QMainWindow):
         write_config_path(self.directory)  # Store the new directory path
         self.photos = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
         self.current_photo_index = 0
+        self.next_photo()
+
+        # Create folders if they don't exist
+        os.makedirs(os.path.join(self.directory, 'trash'), exist_ok=True)
+        os.makedirs(os.path.join(self.directory, 'keep'), exist_ok=True)
+
         self.next_photo()
         
     def animate_move(self, x, y):
