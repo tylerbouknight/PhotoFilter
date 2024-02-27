@@ -1,6 +1,6 @@
 import os
 import shutil
-from PyQt5.QtWidgets import QMainWindow, QLabel, QVBoxLayout, QWidget, QAction, QMenu
+from PyQt5.QtWidgets import QMainWindow, QLabel, QVBoxLayout, QWidget, QAction, QMenu, QGraphicsOpacityEffect
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import Qt, QPropertyAnimation, QEasingCurve, QPoint, QEvent
 
@@ -50,7 +50,7 @@ class PhotoFilter(QMainWindow):
         self.show()
 
     def animate_move(self, x, y):
-        self.animation.setDuration(500)  # Duration in milliseconds
+        self.animation.setDuration(350)  # Duration in milliseconds
         self.animation.setStartValue(self.label.pos())
         self.animation.setEndValue(self.label.pos() + QPoint(x, y))
         self.animation.start()
@@ -74,6 +74,17 @@ class PhotoFilter(QMainWindow):
         pixmap = QPixmap.fromImage(image)
         self.label.setPixmap(pixmap.scaled(800, 600, Qt.KeepAspectRatio))
         self.label.setAlignment(Qt.AlignCenter)
+
+        # Create an opacity effect and set it to the label
+        self.opacity_effect = QGraphicsOpacityEffect(self.label)
+        self.label.setGraphicsEffect(self.opacity_effect)
+
+        # Create an animation for the opacity
+        self.opacity_anim = QPropertyAnimation(self.opacity_effect, b"opacity")
+        self.opacity_anim.setDuration(100)  # Duration in milliseconds
+        self.opacity_anim.setStartValue(0)
+        self.opacity_anim.setEndValue(1)
+        self.opacity_anim.start()
 
     def undo(self):
         if self.action_stack:
