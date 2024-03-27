@@ -1,10 +1,9 @@
-# Standard library imports
+import time
 import os
 import shutil
 import sys
 import configparser
 
-# Third-party library imports
 from PyQt5.QtWidgets import QApplication, QAction, QFileDialog, QLabel, QMainWindow, QMenu, QVBoxLayout, QWidget
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import Qt, QPoint, QEvent, QPropertyAnimation, QEasingCurve, QUrl
@@ -153,11 +152,18 @@ class PhotoFilter(QMainWindow):
 
     def undo(self):
         if self.action_stack:
-            last_action, last_photo = self.action_stack.pop()
-            shutil.move(os.path.join(self.directory, last_action, last_photo), os.path.join(self.directory, last_photo))
+            action, last_photo = self.action_stack.pop()
+            if action == "trash":
+                source = os.path.join(self.directory, 'trash', last_photo)
+            else:
+                source = os.path.join(self.directory, 'keep', last_photo)
+            destination = os.path.join(self.directory, last_photo)
+            shutil.move(source, destination)
             self.current_photo_index = max(self.current_photo_index - 1, 0)
             self.photo = last_photo
             self.display_photo()
+            # Add the reversed action to the stack for redo functionality (optional)
+            self.action_stack.append((os.path.basename(source), last_photo))  # Assuming "basename(source)" represents the original directory ("trash" or "keep")
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Left:
@@ -168,23 +174,40 @@ class PhotoFilter(QMainWindow):
             self.skip()
 
     def move_to_trash(self):
-        if self.current_photo_index > 0:  # Prevents moving non-existent photo
-            self.animate_move(-800, 0)
-            shutil.move(os.path.join(self.directory, self.photo), os.path.join(self.directory, 'trash', self.photo))
-            self.action_stack.append(('trash', self.photo))
+        if self.current_photo_index >= 0:
+            if self.photo.endswith('.MP4'):
+                self.player.stop()
+                self.player.setMedia(QMediaContent())  # Clear the current media
+                time.sleep(0.5)  # Give it a moment to release the file
+            original_location = os.path.join(self.directory, self.photo)
+            destination = os.path.join(self.directory, 'trash', self.photo)
+            self.try_move_file(original_location, destination)
+            self.action_stack.append(("trash", self.photo))  # Update action stack
             self.next_photo()
 
     def keep(self):
-        if self.current_photo_index > 0:  # Prevents moving non-existent photo
-            self.animate_move(800, 0)
-            shutil.move(os.path.join(self.directory, self.photo), os.path.join(self.directory, 'keep', self.photo))
-            self.action_stack.append(('keep', self.photo))
+        if self.current_photo_index >= 0:
+            if self.photo.endswith('.MP4'):
+                self.player.stop()
+                self.player.setMedia(QMediaContent())  # Clear the current media
+                time.sleep(0.5)  # Give it a moment to release the file
+            original_location = os.path.join(self.directory, self.photo)
+            destination = os.path.join(self.directory, 'keep', self.photo)
+            self.try_move_file(original_location, destination)
+            self.action_stack.append(("keep", self.photo))  # Update action stack
             self.next_photo()
 
-    def skip(self):
-        if self.current_photo_index > 0:  # Prevents skipping non-existent photo
-            self.animate_move(0, -600)
-            self.next_photo()
+    def try_move_file(self, src, dst, attempts=5, delay=1):
+        for attempt in range(attempts):
+            try:
+                shutil.move(src, dst)
+                break  # Exit the loop if the move was successful
+            except PermissionError:
+                if attempt < attempts - 1:  # Avoid waiting after the last attempt
+                    time.sleep(delay)  # Wait before retrying
+                else:
+                    raise  # Re-raise the exception if all attempts fail
+
 
 # Entry point of the application
 if __name__ == "__main__":
