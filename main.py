@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QFileDialog
+from PyQt5.QtWidgets import QApplication
 from photo_filter import *
 
 if __name__ == "__main__":
