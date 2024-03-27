@@ -5,10 +5,11 @@ import sys
 import configparser
 
 # Third-party library imports
-from PyQt5.QtWidgets import (QApplication, QAction, QFileDialog, QLabel, QMainWindow, 
-                             QMenu, QVBoxLayout, QWidget)
+from PyQt5.QtWidgets import QApplication, QAction, QFileDialog, QLabel, QMainWindow, QMenu, QVBoxLayout, QWidget
 from PyQt5.QtGui import QImage, QPixmap
-from PyQt5.QtCore import Qt, QPoint, QEvent, QPropertyAnimation, QEasingCurve
+from PyQt5.QtCore import Qt, QPoint, QEvent, QPropertyAnimation, QEasingCurve, QUrl
+from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
+from PyQt5.QtMultimediaWidgets import QVideoWidget
 
 # Configuration functions
 def config_path(filename='config.ini', section='DEFAULT', option='directory', default='C:\\'):
@@ -54,8 +55,12 @@ class PhotoFilter(QMainWindow):
 
     def setup_layout(self):
         self.label = QLabel(self)
+        self.videoWidget = QVideoWidget(self)  # Video widget
+        self.player = QMediaPlayer(self)  # Media player
+        self.player.setVideoOutput(self.videoWidget)  # Set video output to the widget
         layout = QVBoxLayout()
         layout.addWidget(self.label)
+        layout.addWidget(self.videoWidget)  # Add video widget to layout
         widget = QWidget()
         widget.setLayout(layout)
         self.setCentralWidget(widget)
@@ -83,7 +88,7 @@ class PhotoFilter(QMainWindow):
         self.installEventFilter(self)
 
     def load_photos(self):
-        self.photos = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
+        self.photos = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f)) and (f.endswith('.jpg') or f.endswith('.MP4'))]
         os.makedirs(os.path.join(self.directory, 'trash'), exist_ok=True)
         os.makedirs(os.path.join(self.directory, 'keep'), exist_ok=True)
         if self.photos:
@@ -112,6 +117,7 @@ class PhotoFilter(QMainWindow):
         return super().eventFilter(obj, event)
 
     def next_photo(self):
+        self.player.stop()  # Stop video if playing
         if self.current_photo_index < len(self.photos) - 1:
             self.current_photo_index += 1
             self.photo = self.photos[self.current_photo_index]
@@ -120,18 +126,30 @@ class PhotoFilter(QMainWindow):
             self.photo = None  # No more photos to display
             self.display_photo()  # Call this to clear the display or show a default message
 
-
     def display_photo(self):
         if self.photo:  # Check if self.photo is not None
-            image_path = os.path.join(self.directory, self.photo)
-            image = QImage(image_path)
-            pixmap = QPixmap.fromImage(image)
-            self.label.setPixmap(pixmap.scaled(self.size(), Qt.KeepAspectRatio))
-            self.label.setAlignment(Qt.AlignCenter)
+            if self.photo.endswith('.MP4'):  # Check if the file is a video
+                self.label.clear()  # Clear the photo label
+                self.label.hide()  # Hide the photo label as we will use videoWidget for videos
+                video_path = os.path.join(self.directory, self.photo)
+                self.player.setMedia(QMediaContent(QUrl.fromLocalFile(video_path)))
+                self.player.play()
+                self.videoWidget.show()  # Show the video widget
+            else:  # It's an image
+                self.videoWidget.hide()  # Hide the video widget
+                self.label.show()  # Show the photo label
+                image_path = os.path.join(self.directory, self.photo)
+                image = QImage(image_path)
+                if not image.isNull():  # Make sure the image is not null
+                    pixmap = QPixmap.fromImage(image)
+                    self.label.setPixmap(pixmap.scaled(self.size(), Qt.KeepAspectRatio))
+                    self.label.setAlignment(Qt.AlignCenter)
+                else:
+                    self.label.setText("Invalid image file")  # Display error message for invalid images
         else:
-            self.label.setText("No photos to display")  # Show a default message
+            self.label.setText("No photos or videos to display")  # Show a default message
             self.label.setAlignment(Qt.AlignCenter)  # Center the message
-
+            self.videoWidget.hide()  # Ensure video widget is hidden when there are no media files
 
     def undo(self):
         if self.action_stack:
@@ -176,4 +194,3 @@ if __name__ == "__main__":
     directory = config_path()
     ex = PhotoFilter(directory)
     sys.exit(app.exec_())
-
