@@ -86,6 +86,10 @@ class PhotoFilter(QMainWindow):
         self.photos = [f for f in os.listdir(self.directory) if os.path.isfile(os.path.join(self.directory, f))]
         os.makedirs(os.path.join(self.directory, 'trash'), exist_ok=True)
         os.makedirs(os.path.join(self.directory, 'keep'), exist_ok=True)
+        if self.photos:
+            self.photo = self.photos[0]
+        else:
+            self.photo = None
 
     def change_directory(self):
         directory = QFileDialog.getExistingDirectory(self, 'Select a folder:', self.directory, QFileDialog.ShowDirsOnly)
@@ -108,19 +112,26 @@ class PhotoFilter(QMainWindow):
         return super().eventFilter(obj, event)
 
     def next_photo(self):
-        if self.current_photo_index < len(self.photos):
-            self.photo = self.photos[self.current_photo_index]
+        if self.current_photo_index < len(self.photos) - 1:
             self.current_photo_index += 1
+            self.photo = self.photos[self.current_photo_index]
             self.display_photo()
         else:
-            self.close()
+            self.photo = None  # No more photos to display
+            self.display_photo()  # Call this to clear the display or show a default message
+
 
     def display_photo(self):
-        image_path = os.path.join(self.directory, self.photo)
-        image = QImage(image_path)
-        pixmap = QPixmap.fromImage(image)
-        self.label.setPixmap(pixmap.scaled(self.size(), Qt.KeepAspectRatio))
-        self.label.setAlignment(Qt.AlignCenter)
+        if self.photo:  # Check if self.photo is not None
+            image_path = os.path.join(self.directory, self.photo)
+            image = QImage(image_path)
+            pixmap = QPixmap.fromImage(image)
+            self.label.setPixmap(pixmap.scaled(self.size(), Qt.KeepAspectRatio))
+            self.label.setAlignment(Qt.AlignCenter)
+        else:
+            self.label.setText("No photos to display")  # Show a default message
+            self.label.setAlignment(Qt.AlignCenter)  # Center the message
+
 
     def undo(self):
         if self.action_stack:
